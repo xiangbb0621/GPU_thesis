@@ -39,6 +39,7 @@ OPTEE_EXAMPLES_PATH		?= $(ROOT)/optee_examples
 OPTEE_RUST_PATH			?= $(ROOT)/optee_rust
 OPTEE_FTPM_PATH			?= $(ROOT)/optee_ftpm
 BUILDROOT_TARGET_ROOT		?= $(ROOT)/out-br/target
+BUILDROOT_PATH_4_4 			?= $(ROOT)/out-br_4_4
 MS_TPM_20_REF_PATH		?= $(ROOT)/ms-tpm-20-ref
 
 # default high verbosity. slow uarts shall specify lower if prefered
@@ -321,6 +322,26 @@ BR2_PACKAGE_OPENSC ?= y
 # Embed keyutils for trusted-keys
 BR2_PACKAGE_KEYUTILS ?= y
 
+# custom
+BR2_GENERATE_LOCALE = en_US.UTF-8
+BR2_ENABLE_LOCALE_WHITELIST = C en_US.UTF-8
+BR2_TARGET_GENERIC_ROOT_PASSWD="ss6679533"
+
+BR2_PACKAGE_BUSYBOX_SHOW_OTHERS=y
+BR2_PACKAGE_BASH=y
+BR2_SYSTEM_BIN_SH_BASH=y
+BR2_PACKAGE_MAKE = y
+BR2_PACKAGE_LIBTOOL = y
+
+BR2_PACKAGE_LIBDRM=y
+BR2_PACKAGE_LIBDRM_INSTALL_TESTS=y
+BR2_PACKAGE_MEMSTAT=y
+BR2_PACKAGE_DTC=y
+BR2_PACKAGE_GDB=y
+BR2_PACKAGE_OPENSSH=y
+BR2_PACKAGE_MESA3D_DEMOS=y
+
+
 # All BR2_* variables from the makefile or the environment are appended to
 # ../out-br/extra.conf. All values are quoted "..." except y and n.
 double-quote = "#" # This really sets the variable to " and avoids upsetting vim's syntax highlighting
@@ -336,12 +357,12 @@ endif
 
 .PHONY: buildroot
 buildroot: optee-os
-	@mkdir -p ../out-br
-	@rm -f ../out-br/build/optee_*/.stamp_*
-	@rm -f ../out-br/extra.conf
-	@$(call append-br2-vars,../out-br/extra.conf)
+	@mkdir -p $(BUILDROOT_PATH_4_4)
+	@rm -f $(BUILDROOT_PATH_4_4)/build/optee_*/.stamp_*
+	@rm -f $(BUILDROOT_PATH_4_4)/extra.conf
+	@$(call append-br2-vars,../out-br_4_4/extra.conf)
 	@(cd .. && $(PYTHON3) build/br-ext/scripts/make_def_config.py \
-		--br buildroot --out out-br --br-ext build/br-ext \
+		--br buildroot --out out-br_4_4 --br-ext build/br-ext \
 		--top-dir "$(ROOT)" \
 		--br-defconfig build/br-ext/configs/optee_$(BUILDROOT_ARCH) \
 		--br-defconfig build/br-ext/configs/optee_generic \
@@ -352,17 +373,17 @@ buildroot: optee-os
 		$(DEFCONFIG_TSS) \
 		$(DEFCONFIG_TPM_MODULE) \
 		$(DEFCONFIG_FTPM) \
-		--br-defconfig out-br/extra.conf \
+		--br-defconfig out-br_4_4/extra.conf \
 		--make-cmd $(MAKE))
-	@$(MAKE) $(br-make-flags) -C ../out-br all
+	@$(MAKE) $(br-make-flags) -C $(BUILDROOT_PATH_4_4) all
 
 .PHONY: buildroot-clean
 buildroot-clean:
-	@test ! -d $(ROOT)/out-br || $(MAKE) -C $(ROOT)/out-br clean
+	@test ! -d $(BUILDROOT_PATH_4_4) || $(MAKE) -C $(BUILDROOT_PATH_4_4) clean
 
 .PHONY: buildroot-cleaner
 buildroot-cleaner:
-	@rm -rf $(ROOT)/out-br
+	@rm -rf $(BUILDROOT_PATH_4_4)
 
 ################################################################################
 # Linux

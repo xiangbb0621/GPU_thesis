@@ -17,11 +17,13 @@ TF_A_PATH		?= $(ROOT)/trusted-firmware-a
 BINARIES_PATH		?= $(ROOT)/out
 UBOOT_PATH		?= $(ROOT)/u-boot
 UBOOT_BIN		?= $(UBOOT_PATH)/u-boot.bin
-ROOT_IMG 		?= $(ROOT)/out-br/images/rootfs.ext2
+# ROOT_IMG 		?= $(ROOT)/out-br/images/rootfs.ext2
+ROOT_4_4_IMG	?= $(ROOT)/out-br_4_4/images/rootfs.ext2
 BOOT_IMG		?= $(ROOT)/out/rockpi4.img
 RKDEVELOPTOOL_PATH	?= $(ROOT)/rkdeveloptool
 RKDEVELOPTOOL_BIN	?= $(RKDEVELOPTOOL_PATH)/rkdeveloptool
 LOADER_BIN		?= $(BINARIES_PATH)/rk3399_loader_v1.20.119.bin
+LIBMALI_14_PATH ?= $(ROOT)/libMali_14
 
 LINUX_MODULES ?= n
 
@@ -43,7 +45,7 @@ BR2_PACKAGE_OPENSSH = y
 BR2_PACKAGE_OPENSSH_SERVER = y
 BR2_ROOTFS_POST_BUILD_SCRIPT = $(ROOT)/build/br-ext/board/rockpi4/post-build.sh
 else
-BR2_TARGET_ROOTFS_EXT2_SIZE = 112M
+BR2_TARGET_ROOTFS_EXT2_SIZE = 600M
 endif
 
 ################################################################################
@@ -192,13 +194,21 @@ boot-img: u-boot buildroot $(LINUX_PATH)/arch/arm64/boot/Image.gz
 	sgdisk -u 5:17d61bff-8fdc-4089-b675-9be21b9f6ac7 $(BOOT_IMG)
 	dd if=$(UBOOT_PATH)/idbloader.img of=$(BOOT_IMG) bs=1kiB seek=32 conv=notrunc
 	dd if=$(UBOOT_PATH)/u-boot.itb of=$(BOOT_IMG) bs=1kiB seek=8192 conv=notrunc
-	e2mkdir $(ROOT_IMG):/boot
-	e2cp $(LINUX_PATH)/arch/arm64/boot/Image.gz $(ROOT_IMG):/boot
-	e2cp $(LINUX_PATH)/arch/arm64/boot/dts/rockchip/rk3399-rock-pi-4b.dtb $(ROOT_IMG):/boot
+
+	e2mkdir $(ROOT_4_4_IMG):/boot
+	e2cp $(LINUX_PATH)/arch/arm64/boot/Image.gz $(ROOT_4_4_IMG):/boot
+	e2cp $(LINUX_PATH)/arch/arm64/boot/dts/rockchip/rk3399-rock-pi-4b.dtb $(ROOT_4_4_IMG):/boot
+
+# libMali_14 和 icd
+	e2cp -ap $(LIBMALI_14_PATH)/etc/OpenCL/vendors/arm.icd $(ROOT_4_4_IMG):/etc/OpenCL/vendors/arm.icd
+	e2cp -ap $(LIBMALI_14_PATH)/usr/lib/aarch64-linux-gnu/libMali.so.14.0 $(ROOT_4_4_IMG):/usr/lib/libMali.so.14.0
+
 ifeq ($(LINUX_MODULES),y)
-	find $(BINARIES_PATH)/modules -type f | while read f; do e2cp -a $$f $(ROOT_IMG):$$(echo $$f | sed s@$(BINARIES_PATH)/modules@@); done
+	find $(BINARIES_PATH)/modules -type f | while read f;
+		do e2cp -a $$f $(ROOT_4_4_IMG):$$(echo $$f | sed s@$(BINARIES_PATH)/modules@@); 
+	done
 endif
-	dd if=$(ROOT_IMG) of=$(BOOT_IMG) bs=1kiB seek=12288 conv=notrunc
+	dd if=$(ROOT_4_4_IMG) of=$(BOOT_IMG) bs=1kiB seek=12288 conv=notrunc
 
 .PHONY: boot-img-clean
 boot-img-clean:
