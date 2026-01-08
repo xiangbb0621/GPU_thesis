@@ -30,7 +30,7 @@ ROOT ?= $(shell pwd)/..
 UNAME_M				:= $(shell uname -m)
 ARCH				?= arm
 BUILD_PATH			?= $(ROOT)/build
-LINUX_PATH			?= $(ROOT)/linux
+LINUX_PATH			?= $(ROOT)/linux_4_4
 UBOOT_PATH			?= $(ROOT)/u-boot
 OPTEE_OS_PATH			?= $(ROOT)/optee_os
 OPTEE_CLIENT_PATH		?= $(ROOT)/optee_client
@@ -367,7 +367,7 @@ buildroot-cleaner:
 ################################################################################
 # Linux
 ################################################################################
-LINUX_COMMON_FLAGS ?= LOCALVERSION= CROSS_COMPILE=$(CROSS_COMPILE_NS_KERNEL)
+LINUX_COMMON_FLAGS ?= LOCALVERSION= CROSS_COMPILE=$(ROOT)/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
 
 .PHONY: linux-menuconfig-common
 linux-menuconfig-common: linux-defconfig
