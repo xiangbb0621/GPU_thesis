@@ -24,6 +24,7 @@ RKDEVELOPTOOL_PATH	?= $(ROOT)/rkdeveloptool
 RKDEVELOPTOOL_BIN	?= $(RKDEVELOPTOOL_PATH)/rkdeveloptool
 LOADER_BIN		?= $(BINARIES_PATH)/rk3399_loader_v1.20.119.bin
 LIBMALI_14_PATH ?= $(ROOT)/libMali_14
+OCL_ICD_PATH	?= $(ROOT)/ocl-icd
 
 LINUX_MODULES ?= n
 
@@ -202,6 +203,12 @@ boot-img: u-boot buildroot $(LINUX_PATH)/arch/arm64/boot/Image.gz
 # libMali_14 和 icd
 	e2cp -ap $(LIBMALI_14_PATH)/etc/OpenCL/vendors/arm.icd $(ROOT_4_4_IMG):/etc/OpenCL/vendors/arm.icd
 	e2cp -ap $(LIBMALI_14_PATH)/usr/lib/aarch64-linux-gnu/libMali.so.14.0 $(ROOT_4_4_IMG):/usr/lib/libMali.so.14.0
+
+# libOpenCL.so  測試 ls /usr/lib | grep "OpenCL"
+	find $(OCL_ICD_PATH)/out_files/usr -type f -o -type l | while read file; do \
+		relative_path=$${file#$(OCL_ICD_PATH)/out_files/usr/}; \
+		e2cp -ap "$$file" $(ROOT_4_4_IMG):/usr/"$$relative_path"; \
+	done
 
 ifeq ($(LINUX_MODULES),y)
 	find $(BINARIES_PATH)/modules -type f | while read f;
